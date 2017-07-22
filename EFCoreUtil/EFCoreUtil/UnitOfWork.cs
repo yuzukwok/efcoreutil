@@ -7,7 +7,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore.Storage;
 using Dapper;
-using Serilog;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace Microsoft.EntityFrameworkCore
 {
@@ -21,13 +22,15 @@ namespace Microsoft.EntityFrameworkCore
         private bool disposed = false;
         private Dictionary<Type, object> repositories;
 
+        private ILogger<TContext> _logger;
         /// <summary>
         /// Initializes a new instance of the <see cref="UnitOfWork{TContext}"/> class.
         /// </summary>
         /// <param name="context">The context.</param>
-        public UnitOfWork(TContext context)
+        public UnitOfWork(TContext context, ILogger<TContext> logger)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
+            _logger = logger;
 
  
         }
@@ -179,9 +182,9 @@ namespace Microsoft.EntityFrameworkCore
             {
                 connection.Open();
             }
-            if (Log.Logger!=null)
+            if (_logger!=null)
             {
-                Log.Logger.Debug("Sql:-> {sql} param:->{@parameter}", sql, parameter);
+                _logger.LogDebug($"Sql:-> {sql} "+System.Environment.NewLine+$" param:->{JsonConvert.SerializeObject(parameter)}");
             }
             
             return await connection.QueryAsync<TReturn>(sql, parameter);
