@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Dapper;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using System.Diagnostics;
 
 namespace Microsoft.EntityFrameworkCore
 {
@@ -182,13 +183,40 @@ namespace Microsoft.EntityFrameworkCore
             {
                 connection.Open();
             }
-            if (_logger!=null)
-            {
-                _logger.LogDebug($"Sql:-> {sql} "+System.Environment.NewLine+$" param:->{JsonConvert.SerializeObject(parameter)}");
-            }
-            
-            return await connection.QueryAsync<TReturn>(sql, parameter);
 
+            Stopwatch watch = new Stopwatch();
+
+            try
+            {
+                watch.Start();
+                var re = await connection.QueryAsync<TReturn>(sql, parameter);
+                watch.Stop();
+                if (_logger != null)
+                {
+                    var querytime = watch.Elapsed.TotalMilliseconds;
+                    _logger.LogDebug($"Sql:-> {sql} " +
+                        System.Environment.NewLine +
+                        $" Param:->{JsonConvert.SerializeObject(parameter)}" +
+                        System.Environment.NewLine +
+                        $"Excute time:{querytime}");
+                }
+                return re;
+            }
+            catch 
+            {
+                if (_logger != null)
+                {
+                   
+                    _logger.LogError($"Sql:-> {sql} " +
+                        System.Environment.NewLine +
+                        $" Param:->{JsonConvert.SerializeObject(parameter)}" +
+                        System.Environment.NewLine +
+                        $"SQL Excute Error");
+                }
+                throw;
+            }
+           
+           
         }
     }
 }
