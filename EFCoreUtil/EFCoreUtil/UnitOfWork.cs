@@ -74,7 +74,7 @@ namespace Microsoft.EntityFrameworkCore
         public int ExecuteSqlCommand(string sql, params object[] parameters) => _context.Database.ExecuteSqlCommand(sql, parameters);
 
         /// <summary>
-        /// Uses raw SQL queries to fetch the specified <typeparamref name="TEntity" /> data.
+        /// EF core FromSql（返回结果必须为定义的DbSet实体，使用不便）
         /// </summary>
         /// <typeparam name="TEntity">The type of the entity.</typeparam>
         /// <param name="sql">The raw SQL.</param>
@@ -176,7 +176,7 @@ namespace Microsoft.EntityFrameworkCore
             disposed = true;
         }
 
-        public async Task<IEnumerable<TReturn>> QuerySqlAsync<TReturn>(string sql, object parameter = null) where TReturn : class
+        public async Task<IEnumerable<TReturn>> QuerySqlAsync<TReturn>(string sql, object parameter = null) 
         {
             var connection = _context.Database.GetDbConnection();
             if (connection.State != ConnectionState.Open)
@@ -217,6 +217,88 @@ namespace Microsoft.EntityFrameworkCore
             }
            
            
+        }
+
+        public async Task<IDataReader> QuerySqlDataReaderAsync<TReturn>(string sql, object parameter = null)
+        {
+            var connection = _context.Database.GetDbConnection();
+            if (connection.State != ConnectionState.Open)
+            {
+                connection.Open();
+            }
+
+            Stopwatch watch = new Stopwatch();
+
+            try
+            {
+                watch.Start();
+                var re = await connection.ExecuteReaderAsync(sql, parameter);
+                watch.Stop();
+                if (_logger != null)
+                {
+                    var querytime = watch.Elapsed.TotalMilliseconds;
+                    _logger.LogDebug($"Sql:-> {sql} " +
+                        System.Environment.NewLine +
+                        $" Param:->{JsonConvert.SerializeObject(parameter)}" +
+                        System.Environment.NewLine +
+                        $"Excute time:{querytime}");
+                }
+                return re;
+            }
+            catch
+            {
+                if (_logger != null)
+                {
+
+                    _logger.LogError($"Sql:-> {sql} " +
+                        System.Environment.NewLine +
+                        $" Param:->{JsonConvert.SerializeObject(parameter)}" +
+                        System.Environment.NewLine +
+                        $"SQL Excute Error");
+                }
+                throw;
+            }
+        }
+
+        public async Task<T> ExecuteScalarAsync<T>(string sql, object parameter = null)
+        {
+            var connection = _context.Database.GetDbConnection();
+            if (connection.State != ConnectionState.Open)
+            {
+                connection.Open();
+            }
+
+            Stopwatch watch = new Stopwatch();
+
+            try
+            {
+                watch.Start();
+                var re = await connection.ExecuteScalarAsync<T>(sql, parameter);
+                watch.Stop();
+                if (_logger != null)
+                {
+                    var querytime = watch.Elapsed.TotalMilliseconds;
+                    _logger.LogDebug($"Sql:-> {sql} " +
+                        System.Environment.NewLine +
+                        $" Param:->{JsonConvert.SerializeObject(parameter)}" +
+                        System.Environment.NewLine +
+                        $"Excute time:{querytime}");
+                }
+                return re;
+            }
+            catch
+            {
+                if (_logger != null)
+                {
+
+                    _logger.LogError($"Sql:-> {sql} " +
+                        System.Environment.NewLine +
+                        $" Param:->{JsonConvert.SerializeObject(parameter)}" +
+                        System.Environment.NewLine +
+                        $"SQL Excute Error");
+                }
+                throw;
+            }
         }
     }
 }

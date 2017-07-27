@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Query;
 using Z.EntityFramework.Plus;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace Microsoft.EntityFrameworkCore
 {
@@ -101,9 +102,10 @@ namespace Microsoft.EntityFrameworkCore
         /// Inserts a new entity synchronously.
         /// </summary>
         /// <param name="entity">The entity to insert.</param>
-        public void Insert(TEntity entity)
+        public EntityEntry<TEntity> Insert(TEntity entity)
         {
             var entry = _dbSet.Add(entity);
+            return entry;
         }
 
         /// <summary>

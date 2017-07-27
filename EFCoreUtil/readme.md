@@ -26,7 +26,7 @@ public ValuesController(IUnitOfWork unitOfWork)
 to access the database asynchronously. For all other cases the non async method
  should be used. 一个工作单元 提交时（送去sql执行）使用异步  
 # SQL执行  
-使用QuerySqlAsync执行sql，内部使用Dapper执行sql，自动记录sql语句到日志（DEBUG级别）
+使用QuerySqlAsync/QuerySqlDataReaderAsync/ExecuteScalarAsync执行sql，内部使用Dapper执行sql，自动记录sql语句到日志（DEBUG级别）
 ```
  var groups = await _unitwork.QuerySqlAsync<ResultHistoryGroupByDate>(@"
 SELECT

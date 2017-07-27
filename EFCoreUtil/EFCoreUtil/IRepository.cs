@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore.Query;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace Microsoft.EntityFrameworkCore
 {
@@ -62,7 +63,7 @@ namespace Microsoft.EntityFrameworkCore
         /// Inserts a new entity synchronously.
         /// </summary>
         /// <param name="entity">The entity to insert.</param>
-        void Insert(TEntity entity);
+        EntityEntry<TEntity> Insert(TEntity entity);
 
         /// <summary>
         /// Inserts a range of entities synchronously.

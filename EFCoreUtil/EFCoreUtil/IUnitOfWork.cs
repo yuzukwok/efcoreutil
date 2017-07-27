@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -42,6 +43,22 @@ namespace Microsoft.EntityFrameworkCore
         /// <param name="sql"></param>
         /// <param name="paramenters"></param>
         /// <returns></returns>
-        Task<IEnumerable<TReturn>> QuerySqlAsync<TReturn>(string sql,  object parameter=null) where TReturn : class;
+        Task<IEnumerable<TReturn>> QuerySqlAsync<TReturn>(string sql,  object parameter=null) ;
+        /// <summary>
+        /// 使用Dapper查询sql ，返回IDataReader
+        /// </summary>
+        /// <typeparam name="TReturn"></typeparam>
+        /// <param name="sql"></param>
+        /// <param name="parameter"></param>
+        /// <returns></returns>
+        Task<IDataReader> QuerySqlDataReaderAsync<TReturn>(string sql, object parameter = null);
+        /// <summary>
+        /// 使用Dapper查询sql ，返回标量值
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="sql"></param>
+        /// <param name="parameter"></param>
+        /// <returns></returns>
+        Task<T> ExecuteScalarAsync<T>(string sql, object parameter = null);
     }
 }
