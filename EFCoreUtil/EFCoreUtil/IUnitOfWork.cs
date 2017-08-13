@@ -51,7 +51,7 @@ namespace Microsoft.EntityFrameworkCore
         /// <param name="sql"></param>
         /// <param name="parameter"></param>
         /// <returns></returns>
-        Task<IDataReader> QuerySqlDataReaderAsync<TReturn>(string sql, object parameter = null);
+        Task<IDataReader> QuerySqlDataReaderAsync(string sql, object parameter = null);
         /// <summary>
         /// 使用Dapper查询sql ，返回标量值
         /// </summary>

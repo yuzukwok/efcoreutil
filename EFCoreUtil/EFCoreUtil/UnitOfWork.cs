@@ -219,7 +219,7 @@ namespace Microsoft.EntityFrameworkCore
            
         }
 
-        public async Task<IDataReader> QuerySqlDataReaderAsync<TReturn>(string sql, object parameter = null)
+        public async Task<IDataReader> QuerySqlDataReaderAsync(string sql, object parameter = null)
         {
             var connection = _context.Database.GetDbConnection();
             if (connection.State != ConnectionState.Open)
