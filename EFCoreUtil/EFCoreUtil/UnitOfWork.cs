@@ -10,6 +10,7 @@ using Dapper;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System.Diagnostics;
+using System.Data.Common;
 
 namespace Microsoft.EntityFrameworkCore
 {
@@ -33,7 +34,7 @@ namespace Microsoft.EntityFrameworkCore
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _logger = logger;
 
- 
+
         }
 
         /// <summary>
@@ -42,7 +43,7 @@ namespace Microsoft.EntityFrameworkCore
         /// <returns>The instance of type <typeparamref name="TContext"/>.</returns>
         public TContext DbContext => _context;
 
-     
+
 
         /// <summary>
         /// Gets the specified repository for the <typeparamref name="TEntity"/>.
@@ -82,7 +83,7 @@ namespace Microsoft.EntityFrameworkCore
         /// <returns>An <see cref="IQueryable{T}" /> that contains elements that satisfy the condition specified by raw SQL.</returns>
         public IQueryable<TEntity> FromSql<TEntity>(string sql, params object[] parameters) where TEntity : class => _context.Set<TEntity>().FromSql(sql, parameters);
 
-      
+
 
         /// <summary>
         /// Saves all changes made in this context to the database.
@@ -91,7 +92,7 @@ namespace Microsoft.EntityFrameworkCore
         /// <returns>The number of state entries written to the database.</returns>
         public int SaveChanges()
         {
-           
+
             return _context.SaveChanges();
         }
 
@@ -176,37 +177,47 @@ namespace Microsoft.EntityFrameworkCore
             disposed = true;
         }
 
-        public async Task<IEnumerable<TReturn>> QuerySqlAsync<TReturn>(string sql, object parameter = null) 
+        public async Task<IEnumerable<TReturn>> QuerySqlAsync<TReturn>(string sql, object parameter = null, bool newconnection = false)
         {
-            var connection = _context.Database.GetDbConnection();
+            //处理连接
+            IDbConnection connection = null;
+            if (newconnection)
+            {
+                var con = _context.Database.GetDbConnection();
+                connection = new Npgsql.NpgsqlConnection(con.ConnectionString);
+            }
+            else
+            {
+                connection = _context.Database.GetDbConnection();
+            }
             if (connection.State != ConnectionState.Open)
             {
                 connection.Open();
             }
-
             Stopwatch watch = new Stopwatch();
 
             try
             {
-                watch.Start();
-                var re = await connection.QueryAsync<TReturn>(sql, parameter);
-                watch.Stop();
-                if (_logger != null)
+                if (newconnection)
                 {
-                    var querytime = watch.Elapsed.TotalMilliseconds;
-                    _logger.LogDebug($"Sql:-> {sql} " +
-                        System.Environment.NewLine +
-                        $" Param:->{JsonConvert.SerializeObject(parameter)}" +
-                        System.Environment.NewLine +
-                        $"Excute time:{querytime}");
+                    using (connection)
+                    {
+                        return await ExcuteQuery<TReturn>(sql, parameter, connection, watch);
+                    }
                 }
-                return re;
+                else
+                {
+                    return await ExcuteQuery<TReturn>(sql, parameter, connection, watch);
+             
+                }
+               
+
             }
-            catch 
+            catch
             {
                 if (_logger != null)
                 {
-                   
+
                     _logger.LogError($"Sql:-> {sql} " +
                         System.Environment.NewLine +
                         $" Param:->{JsonConvert.SerializeObject(parameter)}" +
@@ -215,13 +226,34 @@ namespace Microsoft.EntityFrameworkCore
                 }
                 throw;
             }
-           
-           
+
+
+        }
+
+        private async Task<IEnumerable<TReturn>> ExcuteQuery<TReturn>(string sql, object parameter, IDbConnection connection, Stopwatch watch)
+        {
+            watch.Start();
+            var re = await connection.QueryAsync<TReturn>(sql, parameter);
+            watch.Stop();
+            if (_logger != null)
+            {
+                var querytime = watch.Elapsed.TotalMilliseconds;
+                _logger.LogDebug($"Sql:-> {sql} " +
+                    System.Environment.NewLine +
+                    $" Param:->{JsonConvert.SerializeObject(parameter)}" +
+                    System.Environment.NewLine +
+                    $" Excute time:{querytime}");
+            }
+            return re;
         }
 
         public async Task<IDataReader> QuerySqlDataReaderAsync(string sql, object parameter = null)
         {
-            var connection = _context.Database.GetDbConnection();
+            //处理连接
+            IDbConnection connection = null;
+           
+                connection = _context.Database.GetDbConnection();
+            
             if (connection.State != ConnectionState.Open)
             {
                 connection.Open();
@@ -231,19 +263,9 @@ namespace Microsoft.EntityFrameworkCore
 
             try
             {
-                watch.Start();
-                var re = await connection.ExecuteReaderAsync(sql, parameter);
-                watch.Stop();
-                if (_logger != null)
-                {
-                    var querytime = watch.Elapsed.TotalMilliseconds;
-                    _logger.LogDebug($"Sql:-> {sql} " +
-                        System.Environment.NewLine +
-                        $" Param:->{JsonConvert.SerializeObject(parameter)}" +
-                        System.Environment.NewLine +
-                        $"Excute time:{querytime}");
-                }
-                return re;
+               
+                return await ExcuteReader(sql, parameter, connection, watch);
+                
             }
             catch
             {
@@ -260,9 +282,36 @@ namespace Microsoft.EntityFrameworkCore
             }
         }
 
-        public async Task<T> ExecuteScalarAsync<T>(string sql, object parameter = null)
+        private async Task<IDataReader> ExcuteReader(string sql, object parameter, IDbConnection connection, Stopwatch watch)
         {
-            var connection = _context.Database.GetDbConnection();
+            watch.Start();
+            var re = await connection.ExecuteReaderAsync(sql, parameter);
+            watch.Stop();
+            if (_logger != null)
+            {
+                var querytime = watch.Elapsed.TotalMilliseconds;
+                _logger.LogDebug($"Sql:-> {sql} " +
+                    System.Environment.NewLine +
+                    $" Param:->{JsonConvert.SerializeObject(parameter)}" +
+                    System.Environment.NewLine +
+                    $"Excute time:{querytime}");
+            }
+            return re;
+        }
+
+        public async Task<T> ExecuteScalarAsync<T>(string sql, object parameter = null, bool newconnection = false)
+        {
+            //处理连接
+            IDbConnection connection = null;
+            if (newconnection)
+            {
+                var con = _context.Database.GetDbConnection();
+                connection = new Npgsql.NpgsqlConnection(con.ConnectionString);
+            }
+            else
+            {
+                connection = _context.Database.GetDbConnection();
+            }
             if (connection.State != ConnectionState.Open)
             {
                 connection.Open();
@@ -272,19 +321,20 @@ namespace Microsoft.EntityFrameworkCore
 
             try
             {
-                watch.Start();
-                var re = await connection.ExecuteScalarAsync<T>(sql, parameter);
-                watch.Stop();
-                if (_logger != null)
+                if (newconnection)
                 {
-                    var querytime = watch.Elapsed.TotalMilliseconds;
-                    _logger.LogDebug($"Sql:-> {sql} " +
-                        System.Environment.NewLine +
-                        $" Param:->{JsonConvert.SerializeObject(parameter)}" +
-                        System.Environment.NewLine +
-                        $"Excute time:{querytime}");
+                    using (connection)
+                    {
+                        return await ExcuteScalar<T>(sql, parameter, connection, watch);
+                    }
                 }
-                return re;
+                else
+                {
+                    return await ExcuteScalar<T>(sql, parameter, connection, watch);
+                }
+               
+
+
             }
             catch
             {
@@ -299,6 +349,23 @@ namespace Microsoft.EntityFrameworkCore
                 }
                 throw;
             }
+        }
+
+        private async Task<T> ExcuteScalar<T>(string sql, object parameter, IDbConnection connection, Stopwatch watch)
+        {
+            watch.Start();
+            var re = await connection.ExecuteScalarAsync<T>(sql, parameter);
+            watch.Stop();
+            if (_logger != null)
+            {
+                var querytime = watch.Elapsed.TotalMilliseconds;
+                _logger.LogDebug($"Sql:-> {sql} " +
+                    System.Environment.NewLine +
+                    $" Param:->{JsonConvert.SerializeObject(parameter)}" +
+                    System.Environment.NewLine +
+                    $"Excute time:{querytime}");
+            }
+            return re;
         }
     }
 }

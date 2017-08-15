@@ -43,7 +43,7 @@ namespace Microsoft.EntityFrameworkCore
         /// <param name="sql"></param>
         /// <param name="paramenters"></param>
         /// <returns></returns>
-        Task<IEnumerable<TReturn>> QuerySqlAsync<TReturn>(string sql,  object parameter=null) ;
+        Task<IEnumerable<TReturn>> QuerySqlAsync<TReturn>(string sql,  object parameter=null, bool newconnection = false) ;
         /// <summary>
         /// 使用Dapper查询sql ，返回IDataReader
         /// </summary>
@@ -51,7 +51,7 @@ namespace Microsoft.EntityFrameworkCore
         /// <param name="sql"></param>
         /// <param name="parameter"></param>
         /// <returns></returns>
-        Task<IDataReader> QuerySqlDataReaderAsync(string sql, object parameter = null);
+        Task<IDataReader> QuerySqlDataReaderAsync(string sql, object parameter = null, bool newconnection = false);
         /// <summary>
         /// 使用Dapper查询sql ，返回标量值
         /// </summary>
@@ -59,6 +59,6 @@ namespace Microsoft.EntityFrameworkCore
         /// <param name="sql"></param>
         /// <param name="parameter"></param>
         /// <returns></returns>
-        Task<T> ExecuteScalarAsync<T>(string sql, object parameter = null);
+        Task<T> ExecuteScalarAsync<T>(string sql, object parameter = null,bool newconnection= false);
     }
 }
