@@ -34,6 +34,7 @@ namespace Microsoft.EntityFrameworkCore
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _logger = logger;
 
+        
 
         }
 
@@ -170,7 +171,8 @@ namespace Microsoft.EntityFrameworkCore
                     }
 
                     // dispose the db context.
-                    _context.Dispose();
+                    //TODO let di dispose
+                   // _context.Dispose();
                 }
             }
 
