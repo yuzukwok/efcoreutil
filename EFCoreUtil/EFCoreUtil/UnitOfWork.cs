@@ -11,6 +11,8 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System.Diagnostics;
 using System.Data.Common;
+using EFCoreUtil.COPY;
+using Npgsql;
 
 namespace Microsoft.EntityFrameworkCore
 {
@@ -65,6 +67,18 @@ namespace Microsoft.EntityFrameworkCore
             }
 
             return (IRepository<TEntity>)repositories[type];
+        }
+
+        public  void PgCopy<TEntity>(PostgreSQLCopyHelper<TEntity> copymap, IEnumerable<TEntity> entities) where TEntity : class
+        {
+            //处理连接
+            IDbConnection connection = null;
+            connection = SetDbConnection(true, connection);
+            using (connection)
+            {
+                
+                copymap.SaveAll(connection as NpgsqlConnection, entities);
+            }
         }
 
         /// <summary>
@@ -183,19 +197,8 @@ namespace Microsoft.EntityFrameworkCore
         {
             //处理连接
             IDbConnection connection = null;
-            if (newconnection)
-            {
-                var con = _context.Database.GetDbConnection();
-                connection = new Npgsql.NpgsqlConnection(con.ConnectionString);
-            }
-            else
-            {
-                connection = _context.Database.GetDbConnection();
-            }
-            if (connection.State != ConnectionState.Open)
-            {
-                connection.Open();
-            }
+            connection = SetDbConnection(newconnection, connection);
+
             Stopwatch watch = new Stopwatch();
 
             try
@@ -305,19 +308,7 @@ namespace Microsoft.EntityFrameworkCore
         {
             //处理连接
             IDbConnection connection = null;
-            if (newconnection)
-            {
-                var con = _context.Database.GetDbConnection();
-                connection = new Npgsql.NpgsqlConnection(con.ConnectionString);
-            }
-            else
-            {
-                connection = _context.Database.GetDbConnection();
-            }
-            if (connection.State != ConnectionState.Open)
-            {
-                connection.Open();
-            }
+            connection = SetDbConnection(newconnection, connection);
 
             Stopwatch watch = new Stopwatch();
 
@@ -351,6 +342,24 @@ namespace Microsoft.EntityFrameworkCore
                 }
                 throw;
             }
+        }
+
+        private IDbConnection SetDbConnection(bool newconnection, IDbConnection connection)
+        {
+            if (newconnection)
+            {
+                var con = _context.Database.GetDbConnection();
+                connection = new Npgsql.NpgsqlConnection(con.ConnectionString);
+            }
+            else
+            {
+                connection = _context.Database.GetDbConnection();
+            }
+            if (connection.State != ConnectionState.Open)
+            {
+                connection.Open();
+            }
+            return connection;
         }
 
         private async Task<T> ExcuteScalar<T>(string sql, object parameter, IDbConnection connection, Stopwatch watch)

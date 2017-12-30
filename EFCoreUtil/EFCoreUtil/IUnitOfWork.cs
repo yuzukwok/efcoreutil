@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using EFCoreUtil.COPY;
 
 namespace Microsoft.EntityFrameworkCore
 {
@@ -22,7 +23,8 @@ namespace Microsoft.EntityFrameworkCore
         /// <returns>An instance of type inherited from <see cref="IRepository{TEntity}"/> interface.</returns>
         IRepository<TEntity> GetRepository<TEntity>() where TEntity : class;
 
-
+        void PgCopy<TEntity>(PostgreSQLCopyHelper<TEntity> copymap,IEnumerable<TEntity> entities) where TEntity : class;
+         
         /// <summary>
         /// Asynchronously saves all changes made in this unit of work to the database.
         /// </summary>
