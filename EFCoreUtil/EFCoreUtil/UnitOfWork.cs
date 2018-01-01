@@ -107,8 +107,7 @@ namespace Microsoft.EntityFrameworkCore
         /// <returns>The number of state entries written to the database.</returns>
         public int SaveChanges()
         {
-
-            return _context.SaveChanges();
+           return _context.SaveChanges();
         }
 
         /// <summary>
