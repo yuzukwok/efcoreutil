@@ -251,12 +251,12 @@ namespace Microsoft.EntityFrameworkCore
             return re;
         }
 
-        public async Task<IDataReader> QuerySqlDataReaderAsync(string sql, object parameter = null)
+        public async Task<IDataReader> QuerySqlDataReaderAsync(string sql, object parameter = null,bool newconnection = false)
         {
+           
             //处理连接
             IDbConnection connection = null;
-           
-                connection = _context.Database.GetDbConnection();
+            connection = SetDbConnection(newconnection, connection);
             
             if (connection.State != ConnectionState.Open)
             {
