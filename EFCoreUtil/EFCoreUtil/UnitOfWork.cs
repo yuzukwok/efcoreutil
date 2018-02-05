@@ -35,9 +35,6 @@ namespace Microsoft.EntityFrameworkCore
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _logger = logger;
-
-        
-
         }
 
         /// <summary>
@@ -253,23 +250,17 @@ namespace Microsoft.EntityFrameworkCore
 
         public async Task<IDataReader> QuerySqlDataReaderAsync(string sql, object parameter = null,bool newconnection = false)
         {
-           
             //处理连接
             IDbConnection connection = null;
             connection = SetDbConnection(newconnection, connection);
-            
             if (connection.State != ConnectionState.Open)
             {
                 connection.Open();
             }
-
             Stopwatch watch = new Stopwatch();
-
             try
             {
-               
-                return await ExcuteReader(sql, parameter, connection, watch);
-                
+               return await ExcuteReader(sql, parameter, connection, watch);
             }
             catch
             {
@@ -281,6 +272,35 @@ namespace Microsoft.EntityFrameworkCore
                         $" Param:->{JsonConvert.SerializeObject(parameter)}" +
                         System.Environment.NewLine +
                         $"SQL Excute Error");
+                }
+                throw;
+            }
+        }
+
+        public async Task<(IDataReader, IDbConnection)> QuerySqlDataReaderWithConnectionAsync(string sql, object parameter = null)
+        {
+            //处理连接
+            IDbConnection connection = null;
+            connection = SetDbConnection(true, connection);
+            if (connection.State != ConnectionState.Open)
+            {
+                connection.Open();
+            }
+            Stopwatch watch = new Stopwatch();
+            try
+            {
+                return (await ExcuteReader(sql, parameter, connection, watch),connection);
+            }
+            catch
+            {
+                if (_logger != null)
+                {
+
+                    _logger.LogError($"Sql:-> {sql} " +
+                                     System.Environment.NewLine +
+                                     $" Param:->{JsonConvert.SerializeObject(parameter)}" +
+                                     System.Environment.NewLine +
+                                     $"SQL Excute Error");
                 }
                 throw;
             }
@@ -342,13 +362,19 @@ namespace Microsoft.EntityFrameworkCore
                 throw;
             }
         }
+        
+        static  IDictionary<Type ,string> connects=new Dictionary<Type, string>();
 
         private IDbConnection SetDbConnection(bool newconnection, IDbConnection connection)
         {
             if (newconnection)
             {
-                var con = _context.Database.GetDbConnection();
-                connection = new Npgsql.NpgsqlConnection(con.ConnectionString);
+                var type = typeof(TContext);
+                if (!connects.ContainsKey(type))
+                {
+                    connects[type] =  _context.Database.GetDbConnection().ConnectionString;
+                }
+                connection = new Npgsql.NpgsqlConnection(connects[type]);
             }
             else
             {
