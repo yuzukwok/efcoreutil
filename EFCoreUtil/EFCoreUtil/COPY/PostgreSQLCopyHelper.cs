@@ -33,6 +33,8 @@ namespace EFCoreUtil.COPY
             using (var binaryCopyWriter = connection.BeginBinaryImport(GetCopyCommand()))
             {
                 WriteToStream(binaryCopyWriter, entities);
+                
+                binaryCopyWriter.Complete();
             }
         }
 
