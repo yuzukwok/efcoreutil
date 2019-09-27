@@ -84,7 +84,7 @@ namespace Microsoft.EntityFrameworkCore
         /// <param name="sql">The raw SQL.</param>
         /// <param name="parameters">The parameters.</param>
         /// <returns>The number of state entities written to database.</returns>
-        public int ExecuteSqlCommand(string sql, params object[] parameters) => _context.Database.ExecuteSqlCommand(sql, parameters);
+        public int ExecuteSqlCommand(string sql, params object[] parameters) => _context.Database.ExecuteSqlRaw(sql, parameters);
 
         /// <summary>
         /// EF core FromSql（返回结果必须为定义的DbSet实体，使用不便）
@@ -93,7 +93,7 @@ namespace Microsoft.EntityFrameworkCore
         /// <param name="sql">The raw SQL.</param>
         /// <param name="parameters">The parameters.</param>
         /// <returns>An <see cref="IQueryable{T}" /> that contains elements that satisfy the condition specified by raw SQL.</returns>
-        public IQueryable<TEntity> FromSql<TEntity>(string sql, params object[] parameters) where TEntity : class => _context.Set<TEntity>().FromSql(sql, parameters);
+        public IQueryable<TEntity> FromSql<TEntity>(string sql, params object[] parameters) where TEntity : class => _context.Set<TEntity>().FromSqlRaw(sql, parameters);
 
 
 

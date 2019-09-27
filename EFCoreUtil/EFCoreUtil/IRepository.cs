@@ -49,7 +49,7 @@ namespace Microsoft.EntityFrameworkCore
         /// </summary>
         /// <param name="keyValues">The values of the primary key for the entity to be found.</param>
         /// <returns>A <see cref="Task{TEntity}"/> that represents the asynchronous find operation. The task result contains the found entity or null.</returns>
-        Task<TEntity> FindAsync(params object[] keyValues);
+        ValueTask<TEntity> FindAsync(params object[] keyValues);
 
         /// <summary>
         /// Finds an entity with the given primary key values. If found, is attached to the context and returned. If no entity is found, then null is returned.
@@ -57,7 +57,7 @@ namespace Microsoft.EntityFrameworkCore
         /// <param name="keyValues">The values of the primary key for the entity to be found.</param>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
         /// <returns>A <see cref="Task{TEntity}"/> that represents the asynchronous find operation. The task result contains the found entity or null.</returns>
-        Task<TEntity> FindAsync(object[] keyValues, CancellationToken cancellationToken);
+        ValueTask<TEntity> FindAsync(object[] keyValues, CancellationToken cancellationToken);
 
         /// <summary>
         /// Inserts a new entity synchronously.
@@ -77,20 +77,7 @@ namespace Microsoft.EntityFrameworkCore
         /// <param name="entities">The entities to insert.</param>
         void Insert(IEnumerable<TEntity> entities);
 
-        /// <summary>
-        /// Inserts a new entity asynchronously.
-        /// </summary>
-        /// <param name="entity">The entity to insert.</param>
-        /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-        /// <returns>A <see cref="Task"/> that represents the asynchronous insert operation.</returns>
-        Task InsertAsync(TEntity entity, CancellationToken cancellationToken = default(CancellationToken));
-
-        /// <summary>
-        /// Inserts a range of entities asynchronously.
-        /// </summary>
-        /// <param name="entities">The entities to insert.</param>
-        /// <returns>A <see cref="Task"/> that represents the asynchronous insert operation.</returns>
-        Task InsertAsync(params TEntity[] entities);
+    
 
         /// <summary>
         /// Inserts a range of entities asynchronously.
@@ -118,8 +105,7 @@ namespace Microsoft.EntityFrameworkCore
         /// <param name="entities">The entities.</param>
         void Update(IEnumerable<TEntity> entities);
 
-        Task<int> BatchUpdateAsync(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TEntity>> updateFactory, CancellationToken cancellationToken = default(CancellationToken));
-
+        
 
         /// <summary>
         /// Deletes the entity by the specified primary key.

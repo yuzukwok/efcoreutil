@@ -7,9 +7,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Query;
-using Z.EntityFramework.Plus;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace Microsoft.EntityFrameworkCore
@@ -74,7 +71,7 @@ namespace Microsoft.EntityFrameworkCore
         /// <param name="sql">The raw SQL.</param>
         /// <param name="parameters">The parameters.</param>
         /// <returns>An <see cref="IQueryable{TEntity}" /> that contains elements that satisfy the condition specified by raw SQL.</returns>
-        public IQueryable<TEntity> FromSql(string sql, params object[] parameters) => _dbSet.FromSql(sql, parameters);
+        public IQueryable<TEntity> FromSql(string sql, params object[] parameters) => _dbSet.FromSqlRaw(sql, parameters);
 
         /// <summary>
         /// Finds an entity with the given primary key values. If found, is attached to the context and returned. If no entity is found, then null is returned.
@@ -88,7 +85,7 @@ namespace Microsoft.EntityFrameworkCore
         /// </summary>
         /// <param name="keyValues">The values of the primary key for the entity to be found.</param>
         /// <returns>A <see cref="Task{TEntity}" /> that represents the asynchronous insert operation.</returns>
-        public Task<TEntity> FindAsync(params object[] keyValues) => _dbSet.FindAsync(keyValues);
+        public ValueTask<TEntity> FindAsync(params object[] keyValues) => _dbSet.FindAsync(keyValues);
 
         /// <summary>
         /// Finds an entity with the given primary key values. If found, is attached to the context and returned. If no entity is found, then null is returned.
@@ -96,7 +93,7 @@ namespace Microsoft.EntityFrameworkCore
         /// <param name="keyValues">The values of the primary key for the entity to be found.</param>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
         /// <returns>A <see cref="Task{TEntity}"/> that represents the asynchronous find operation. The task result contains the found entity or null.</returns>
-        public Task<TEntity> FindAsync(object[] keyValues, CancellationToken cancellationToken) => _dbSet.FindAsync(keyValues, cancellationToken);
+        public ValueTask<TEntity> FindAsync(object[] keyValues, CancellationToken cancellationToken) => _dbSet.FindAsync(keyValues, cancellationToken);
 
         /// <summary>
         /// Inserts a new entity synchronously.
@@ -120,22 +117,7 @@ namespace Microsoft.EntityFrameworkCore
         /// <param name="entities">The entities to insert.</param>
         public void Insert(IEnumerable<TEntity> entities) => _dbSet.AddRange(entities);
 
-        /// <summary>
-        /// Inserts a new entity asynchronously.
-        /// </summary>
-        /// <param name="entity">The entity to insert.</param>
-        /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-        /// <returns>A <see cref="Task"/> that represents the asynchronous insert operation.</returns>
-        public Task InsertAsync(TEntity entity, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            return _dbSet.AddAsync(entity, cancellationToken);
-
-            // Shadow properties?
-            //var property = _dbContext.Entry(entity).Property("Created");
-            //if (property != null) {
-            //property.CurrentValue = DateTime.Now;
-            //}
-        }
+      
 
         /// <summary>
         /// Inserts a range of entities asynchronously.
@@ -224,16 +206,6 @@ namespace Microsoft.EntityFrameworkCore
         /// <param name="entities">The entities.</param>
         public void Delete(IEnumerable<TEntity> entities) => _dbSet.RemoveRange(entities);
 
-        public Task<int> BatchUpdateAsync(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TEntity>> updateFactory, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            IQueryable<TEntity> set= _dbSet;
-
-            if (predicate != null)
-            {
-                set = set.Where(predicate);
-            }
-
-            return set.UpdateAsync(updateFactory,cancellationToken);
-        }
+       
     }
 }
